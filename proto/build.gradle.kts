@@ -14,20 +14,22 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:4.27.2")
 }
 
+// Directories
+val buildDir = layout.buildDirectory.asFile.get()
+val downloadDir = (buildDir / "download")
+val unzipDir = (buildDir / "unzip")
+
 sourceSets.main {
     proto {
-        srcDir("$buildDir/extract-included-protos/**.*.proto")
+        srcDir(unzipDir / "proto")
     }
 }
 
 tasks["generateProto"].dependsOn("unzip")
 
-val file = "protos-v1.19.0-rc2.zip"
-val location = "https://github.com/provenance-io/provenance/releases/download/v1.19.0-rc2/$file"
-
-val buildDir = layout.buildDirectory.asFile.get()
-val downloadDir = (buildDir / "download")
-val unzipDir = (buildDir / "extracted-include-protos" / "main")
+val version = "v1.19.0-rc2"
+val file = "protos-$version.zip"
+val location = "https://github.com/provenance-io/provenance/releases/download/$version/$file"
 
 tasks.getByName("clean").doFirst {
     println("deleting downloads")
@@ -36,13 +38,9 @@ tasks.getByName("clean").doFirst {
 }
 
 tasks.register("unzip") {
-    // Download the zip.
     downloadDir.mkdirs()
-    val zip = download(uri(location), downloadDir / file)
-    // Unzip the zip.
     unzipDir.mkdirs()
-
-    unzipTo(unzipDir, zip)
+    unzipTo(unzipDir, download(uri(location), downloadDir / file))
 }
 
 fun download(uri: URI, dest: File): File {
